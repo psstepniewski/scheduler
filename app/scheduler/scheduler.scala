@@ -14,7 +14,6 @@ import scala.util.{Failure, Success, Try}
 
 package object scheduler {
 
-  case class Requester(value: String) extends AnyVal
   case class TopicName(value: String) extends AnyVal
   case class TopicKey(value: String) extends AnyVal
 

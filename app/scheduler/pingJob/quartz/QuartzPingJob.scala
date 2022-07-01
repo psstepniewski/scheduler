@@ -65,19 +65,19 @@ object QuartzPingJob {
 
   private val RETRIES_AFTER_MINUTES = Array(1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 15, 15, 15, 30, 30, 30, 60, 60, 60, 2*60, 2*60, 2*60, 4*60, 4*60, 4*60, 8*60, 8*60, 8*60, 24*60, 24*60, 24*60)
 
-  def jobKey(pingJobId: PingJob.Id): JobKey = new JobKey(s"${pingJobId.value}", PingJob.TypeKey.name)
-  def triggerKey(pingJobId: PingJob.Id, retryNo: Int) = new TriggerKey(s"${pingJobId.value}_$retryNo",  PingJob.TypeKey.name)
+  def jobKey(pingJobId: PingJob.Id): JobKey = new JobKey(s"${pingJobId.value}", "PingJob")
+  def triggerKey(pingJobId: PingJob.Id, retryNo: Int) = new TriggerKey(s"${pingJobId.value}_$retryNo",  "PingJob")
 
   def schedule(pingJobId: PingJob.Id, fireTime: Instant, retryNo: Int = 0)(nativeScheduler: Scheduler): Unit = {
     val quartzJobDetail = JobBuilder.newJob(classOf[QuartzPingJob])
       .withIdentity(jobKey(pingJobId))
-      .withDescription(s"${PingJob.TypeKey.name}[id=$pingJobId]")
+      .withDescription(s"PingJob[id=$pingJobId]")
       .usingJobData(PING_JOB_ID, pingJobId.value)
       .build
     val quartzTrigger = TriggerBuilder.newTrigger
       .withIdentity(triggerKey(pingJobId, retryNo))
       .startAt(Date.from(fireTime))
-      .withDescription(s"${PingJob.TypeKey.name}[id=$pingJobId, retryNo=$retryNo]")
+      .withDescription(s"PingJob[id=$pingJobId, retryNo=$retryNo]")
       .withSchedule(simpleSchedule)
       .forJob(quartzJobDetail)
       .usingJobData(RETRY_NO, retryNo.toString)
@@ -91,7 +91,7 @@ object QuartzPingJob {
     val quartzTrigger = TriggerBuilder.newTrigger
       .withIdentity(triggerKey(pingJobId, nextRetryNo))
       .startAt(Date.from(fireTime.toInstant))
-      .withDescription(s"${PingJob.TypeKey.name}[id=$pingJobId, retryNo=$nextRetryNo] scheduled for $fireTime")
+      .withDescription(s"PingJob[id=$pingJobId, retryNo=$nextRetryNo] scheduled for $fireTime")
       .withSchedule(simpleSchedule)
       .usingJobData(RETRY_NO, nextRetryNo.toString)
       .build

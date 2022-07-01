@@ -1,0 +1,22 @@
+play.http.secret.key="changeme"
+
+scheduler {
+    node {
+        workerId = 1
+        datacenterId = 1
+    }
+
+    db {
+        host = "localhost"
+        name = "dbname"
+        port = "5432"
+        username = "username"
+        password = "password"
+    }
+
+    kafka {
+        bootstrapServers = "kafka:9092"
+    }
+}
+
+include "0_post-conf-includes.conf"

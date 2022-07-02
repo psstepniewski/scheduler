@@ -3,7 +3,7 @@ package scheduler.pingJob.states
 import akka.actor.typed.scaladsl.ActorContext
 import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.{ActorRef, Scheduler}
-import akka.persistence.typed.scaladsl.Effect
+import akka.persistence.typed.scaladsl.{Effect, ReplyEffect}
 import akka.util.Timeout
 import org.apache.kafka.clients.producer.ProducerRecord
 import scheduler.KafkaProducer
@@ -18,7 +18,7 @@ import scala.util.{Failure, Success}
 class ScheduledPingJob[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer, snapshot: Snapshot[A], override val stateName: PingJob.StateName.Value = PingJob.StateName.Scheduled)(implicit akkaScheduler: Scheduler, context: ActorContext[Message], timeout: Timeout)
   extends PingJob.State {
 
-  override def applyMessage(msg: Message): Effect[PingJobApi.Event, PingJob.State] = msg match {
+  override def applyMessage(msg: Message): ReplyEffect[PingJobApi.Event, PingJob.State] = msg match {
     case m: Command.Schedule[_] =>
       Effect
         .reply(m.replyTo)(Command.Schedule.Result.AlreadyScheduled)
@@ -37,7 +37,7 @@ class ScheduledPingJob[A <: KafkaProducer.SerializableMessage](id: Id, quartzSch
           Command.Execute.KafkaFailure(m, ex)
       }
       Effect
-        .none
+        .noReply
     case Command.Execute.KafkaDone(c) =>
       Effect
         .persist(Event.Executed(id, snapshot.pongTopic, snapshot.pongKey, snapshot.pongData, Instant.now()))

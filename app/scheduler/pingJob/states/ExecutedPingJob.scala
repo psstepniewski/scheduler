@@ -2,7 +2,7 @@ package scheduler.pingJob.states
 
 import akka.actor.typed.Scheduler
 import akka.actor.typed.scaladsl.ActorContext
-import akka.persistence.typed.scaladsl.Effect
+import akka.persistence.typed.scaladsl.{Effect, ReplyEffect}
 import akka.util.Timeout
 import scheduler.KafkaProducer
 import scheduler.pingJob.PingJob.Snapshot
@@ -12,7 +12,7 @@ import scheduler.pingJob.{PingJob, PingJobApi}
 class ExecutedPingJob[A <: KafkaProducer.SerializableMessage](snapshot: Snapshot[A], override val stateName: PingJob.StateName.Value = PingJob.StateName.Executed)(implicit akkaScheduler: Scheduler, context: ActorContext[Message], timeout: Timeout)
  extends PingJob.State {
 
-  override def applyMessage(msg: Message): Effect[PingJobApi.Event, PingJob.State] = msg match {
+  override def applyMessage(msg: Message): ReplyEffect[PingJobApi.Event, PingJob.State] = msg match {
     case m: Command.Schedule[_] =>
       Effect
         .reply(m.replyTo)(Command.Schedule.Result.ExecutedState)

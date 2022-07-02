@@ -3,7 +3,7 @@ package scheduler.pingJob.states
 import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Scheduler}
-import akka.persistence.typed.scaladsl.Effect
+import akka.persistence.typed.scaladsl.{Effect, ReplyEffect}
 import akka.util.Timeout
 import scheduler.KafkaProducer
 import scheduler.pingJob.PingJob.{Id, Snapshot, StateName}
@@ -19,7 +19,7 @@ class EmptyPingJob[A <: KafkaProducer.SerializableMessage](id: Id, quartzSchedul
 
   import PingJobApi._
 
-  override def applyMessage(msg: Message): Effect[Event, PingJob.State] =
+  override def applyMessage(msg: Message): ReplyEffect[Event, PingJob.State] =
     msg match {
       case m: Command.Schedule[A] =>
         val f = quartzScheduler
@@ -35,7 +35,7 @@ class EmptyPingJob[A <: KafkaProducer.SerializableMessage](id: Id, quartzSchedul
             Command.Schedule.QuartzFailure(m, ex)
         }
         Effect
-          .none
+          .noReply
       case Command.Schedule.QuartzDone(c) =>
         Effect
           .persist(Event.Scheduled(id, c.pongTopic, c.pongKey, c.pongData, c.willPongTimestamp, Instant.now()))

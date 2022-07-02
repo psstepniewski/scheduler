@@ -13,7 +13,7 @@ import scheduler.objectMapper
 import scheduler.pingJob.{PingJob, PingJobApi, PingJobSelector}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 
 @Singleton

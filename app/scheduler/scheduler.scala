@@ -14,9 +14,6 @@ import scala.util.{Failure, Success, Try}
 
 package object scheduler {
 
-  case class TopicName(value: String) extends AnyVal
-  case class TopicKey(value: String) extends AnyVal
-
   private val INCOMING_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
   private val UTC_ZONE_ID = "UTC"
 

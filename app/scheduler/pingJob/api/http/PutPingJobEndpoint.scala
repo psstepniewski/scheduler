@@ -11,7 +11,7 @@ import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{AbstractController, Action, ControllerComponents}
 import scheduler.pingJob.{PingJob, PingJobApi, PingJobSelector}
-import scheduler.{KafkaProducer, TopicKey, TopicName, WithJsError}
+import scheduler.{KafkaProducer, WithJsError}
 
 import java.time.OffsetDateTime
 import javax.inject.Inject
@@ -64,8 +64,8 @@ class PutPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, actorSystem
 }
 
 object PutPingJobEndpoint {
-  private case class Request(pongTopic: TopicName, pongKey: TopicKey, pongData: JsonNode, willPongTimestamp: OffsetDateTime)
-  private implicit val topicNameReads: Reads[TopicName] = Json.valueReads[TopicName]
-  private implicit val topicKeyReads: Reads[TopicKey] = Json.valueReads[TopicKey]
+  private case class Request(pongTopic: PingJob.TopicName, pongKey: PingJob.TopicKey, pongData: JsonNode, willPongTimestamp: OffsetDateTime)
+  private implicit val topicNameReads: Reads[PingJob.TopicName] = Json.valueReads[PingJob.TopicName]
+  private implicit val topicKeyReads: Reads[PingJob.TopicKey] = Json.valueReads[PingJob.TopicKey]
   private implicit val requestReads: Reads[Request] = Json.reads[Request]
 }

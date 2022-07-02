@@ -17,7 +17,5 @@ object PingJob {
     val Empty, Scheduled, Executed, Cancelled: Value = Value
   }
 
-  def apply[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer): Behavior[Message] = Behaviors.setup { implicit context =>
-    ???
-  }
+  def apply[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer): Behavior[Message] = ???
 }

@@ -1,32 +1,38 @@
 package scheduler.pingJob.states
 
-import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
-import akka.actor.typed.{ActorRef, Behavior, Scheduler}
+import akka.actor.typed.Scheduler
+import akka.actor.typed.scaladsl.ActorContext
+import akka.persistence.typed.scaladsl.Effect
 import akka.util.Timeout
 import scheduler.KafkaProducer
-import scheduler.pingJob.PingJob.{Id, Snapshot}
-import scheduler.pingJob.PingJobApi
+import scheduler.pingJob.PingJob.Snapshot
 import scheduler.pingJob.PingJobApi.{Command, Message}
-import scheduler.pingJob.quartz.QuartzAdapter
+import scheduler.pingJob.{PingJob, PingJobApi}
 
-object ExecutedPingJob {
+class ExecutedPingJob[A <: KafkaProducer.SerializableMessage](snapshot: Snapshot[A])(implicit akkaScheduler: Scheduler, context: ActorContext[Message], timeout: Timeout)
+ extends PingJob.State {
 
-  def apply[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer, snapshot: Snapshot[A])(implicit akkaScheduler: Scheduler, context: ActorContext[Message], timeout: Timeout): Behavior[PingJobApi.Message] =
-    Behaviors.receiveMessage{
-      case m: Command.Schedule[_] =>
-        m.replyTo ! Command.Schedule.Result.ExecutedState
-        Behaviors.same
+  override def applyMessage(msg: Message): Effect[PingJobApi.Event, PingJob.State] = msg match {
+    case m: Command.Schedule[_] =>
+      Effect
+        .reply(m.replyTo)(Command.Schedule.Result.ExecutedState)
 
-      case m: Command.Execute =>
-        m.replyTo ! Command.Execute.Result.AlreadyExecuted
-        Behaviors.same
+    case m: Command.Execute =>
+      Effect
+        .reply(m.replyTo)(Command.Execute.Result.AlreadyExecuted)
 
-      case m: Command.Cancel =>
-        m.replyTo ! Command.Cancel.Result.ExecutedState
-        Behaviors.same
+    case m: Command.Cancel =>
+      Effect
+        .reply(m.replyTo)(Command.Cancel.Result.ExecutedState)
 
-      case m: Command.GetSnapshot =>
-        m.replyTo ! Command.GetSnapshot.Result.Snapshot(snapshot)
-        Behaviors.same
-    }
+    case m: Command.GetSnapshot =>
+      Effect
+        .reply(m.replyTo)(Command.GetSnapshot.Result.Snapshot(snapshot))
+  }
+
+  override def applyEvent(state: PingJob.State, event: PingJobApi.Event): PingJob.State = event match {
+    case _ =>
+      //do nothing
+      state
+  }
 }

@@ -1,10 +1,8 @@
 package scheduler.pingJob.api.http
 
-import akka.actor.ActorSystem
 import akka.actor.typed.Scheduler
 import akka.actor.typed.scaladsl.AskPattern.Askable
 import com.fasterxml.jackson.databind.JsonNode
-import com.typesafe.config.Config
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{AbstractController, Action, ControllerComponents}
@@ -15,7 +13,7 @@ import java.time.OffsetDateTime
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class PutPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, actorSystem: ActorSystem, config: Config, cc: ControllerComponents)(implicit ec: ExecutionContext, scheduler: Scheduler)
+class PutPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents)(implicit ec: ExecutionContext, scheduler: Scheduler)
   extends AbstractController(cc)
     with Logging
     with WithJsError {

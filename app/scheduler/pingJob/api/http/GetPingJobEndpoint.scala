@@ -1,20 +1,19 @@
 package scheduler.pingJob.api.http
 
-import akka.actor.ActorSystem
 import akka.actor.typed.Scheduler
 import akka.actor.typed.scaladsl.AskPattern.Askable
 import com.fasterxml.jackson.databind.JsonNode
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
-import scheduler.{controllerTimeout, objectMapper}
 import scheduler.pingJob.{PingJob, PingJobApi, PingJobSelector}
+import scheduler.{controllerTimeout, objectMapper}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class GetPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, actorSystem: ActorSystem, cc: ControllerComponents)(implicit ec: ExecutionContext, scheduler: Scheduler)
+class GetPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents)(implicit ec: ExecutionContext, scheduler: Scheduler)
   extends AbstractController(cc)
   with Logging {
 

@@ -1,19 +1,18 @@
 package scheduler.pingJob.api.http
 
-import akka.actor.ActorSystem
 import akka.actor.typed.Scheduler
 import akka.actor.typed.scaladsl.AskPattern.Askable
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{AbstractController, Action, ControllerComponents}
-import scheduler.{WithJsError, controllerTimeout}
 import scheduler.pingJob.{PingJob, PingJobApi, PingJobSelector}
+import scheduler.{WithJsError, controllerTimeout}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PatchPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents, actorSystem: ActorSystem)(implicit ec: ExecutionContext, scheduler: Scheduler)
+class PatchPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents)(implicit ec: ExecutionContext, scheduler: Scheduler)
   extends AbstractController(cc)
     with Logging
     with WithJsError {

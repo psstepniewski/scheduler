@@ -60,7 +60,7 @@ object PingJobApi {
 
   sealed trait Event extends CborSerializable
   object Event {
-    case class Created[A <: KafkaProducer.SerializableMessage](pingJobId: PingJob.Id, pongTopic: PingJob.TopicName, pongKey: PingJob.TopicKey, pongData: A, willPongTimestamp: Instant, createdTimestamp: Instant) extends Event
+    case class Scheduled[A <: KafkaProducer.SerializableMessage](pingJobId: PingJob.Id, pongTopic: PingJob.TopicName, pongKey: PingJob.TopicKey, pongData: A, willPongTimestamp: Instant, createdTimestamp: Instant) extends Event
     case class Executed[A <: KafkaProducer.SerializableMessage](pingJobId: PingJob.Id, pongTopic: PingJob.TopicName, pongKey: PingJob.TopicKey, pongData: A, createdTimestamp: Instant) extends Event
     case class Cancelled(pingJobId: PingJob.Id, createdTimestamp: Instant) extends Event
     case class Deleted(pingJobId: PingJob.Id, createdTimestamp: Instant) extends Event

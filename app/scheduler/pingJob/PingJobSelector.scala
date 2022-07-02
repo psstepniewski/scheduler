@@ -1,8 +1,8 @@
 package scheduler.pingJob
 
 import akka.actor.ActorSystem
-import akka.actor.typed.{ActorRef, Scheduler}
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
+import akka.actor.typed.{ActorRef, Scheduler}
 import scheduler.KafkaProducer
 import scheduler.pingJob.quartz.QuartzAdapter
 

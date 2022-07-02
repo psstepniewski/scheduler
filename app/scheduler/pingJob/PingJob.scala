@@ -2,6 +2,8 @@ package scheduler.pingJob
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior, Scheduler}
+import akka.persistence.typed.PersistenceId
+import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
 import scheduler.pingJob.quartz.QuartzAdapter
 import scheduler.pingJob.states.EmptyPingJob
 import scheduler.{CborSerializable, KafkaProducer, actorAskTimeout}
@@ -12,6 +14,8 @@ object PingJob {
 
   import PingJobApi._
 
+  private val entityName = "PingJob"
+
   case class Id(value: String) extends AnyVal
   case class TopicName(value: String) extends AnyVal
   case class TopicKey(value: String) extends AnyVal
@@ -20,9 +24,20 @@ object PingJob {
   object StateName extends Enumeration {
     val Empty, Scheduled, Executed, Cancelled: Value = Value
   }
+  trait State {
+    def applyMessage(msg: Message): Effect[Event, State]
+    def applyEvent(state: State, event: Event): State
+  }
 
   def apply[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer)(implicit akkaScheduler: Scheduler): Behavior[Message] =
     Behaviors.setup { implicit context =>
-      EmptyPingJob[A](id, quartzScheduler, kafkaProducer)
+      EventSourcedBehavior[Message, Event, State](
+        persistenceId = persistenceId(id),
+        emptyState = new EmptyPingJob(id, quartzScheduler, kafkaProducer),
+        commandHandler = (state, msg) => state.applyMessage(msg),
+        eventHandler = (state, event) => state.applyEvent(state, event)
+      )
     }
+
+  def persistenceId(id: Id): PersistenceId = PersistenceId.of(entityName, id.value)
 }

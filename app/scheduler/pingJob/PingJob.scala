@@ -27,6 +27,7 @@ object PingJob {
   trait State {
     def applyMessage(msg: Message): Effect[Event, State]
     def applyEvent(state: State, event: Event): State
+    def stateName: StateName.Value
   }
 
   def apply[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer)(implicit akkaScheduler: Scheduler): Behavior[Message] =
@@ -34,8 +35,14 @@ object PingJob {
       EventSourcedBehavior[Message, Event, State](
         persistenceId = persistenceId(id),
         emptyState = new EmptyPingJob(id, quartzScheduler, kafkaProducer),
-        commandHandler = (state, msg) => state.applyMessage(msg),
-        eventHandler = (state, event) => state.applyEvent(state, event)
+        commandHandler = (state, msg) => {
+          context.log.debug("{}[{},{}] received message {}", entityName, id, state.stateName, msg)
+          state.applyMessage(msg)
+        },
+        eventHandler = (state, event) => {
+          context.log.debug("{}[{},{}] will apply event {}", entityName, id, state.stateName, event)
+          state.applyEvent(state, event)
+        }
       )
     }
 

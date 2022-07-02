@@ -9,7 +9,7 @@ import scheduler.pingJob.PingJob.Snapshot
 import scheduler.pingJob.PingJobApi.{Command, Message}
 import scheduler.pingJob.{PingJob, PingJobApi}
 
-class CancelledPingJob[A <: KafkaProducer.SerializableMessage](snapshot: Snapshot[A])(implicit akkaScheduler: Scheduler, context: ActorContext[Message], timeout: Timeout)
+class CancelledPingJob[A <: KafkaProducer.SerializableMessage](snapshot: Snapshot[A], override val stateName: PingJob.StateName.Value = PingJob.StateName.Cancelled)(implicit akkaScheduler: Scheduler, context: ActorContext[Message], timeout: Timeout)
  extends PingJob.State {
 
   override def applyMessage(msg: Message): Effect[PingJobApi.Event, PingJob.State] = msg match {

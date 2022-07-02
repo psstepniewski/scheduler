@@ -14,7 +14,7 @@ import scheduler.pingJob.{PingJob, PingJobApi}
 import java.time.Instant
 import scala.util.{Failure, Success}
 
-class EmptyPingJob[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer)(implicit akkaScheduler: Scheduler, context: ActorContext[Message], timeout: Timeout)
+class EmptyPingJob[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer, override val stateName: PingJob.StateName.Value = PingJob.StateName.Empty)(implicit akkaScheduler: Scheduler, context: ActorContext[Message], timeout: Timeout)
   extends PingJob.State {
 
   import PingJobApi._

@@ -6,7 +6,7 @@ import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
 import scheduler.pingJob.quartz.QuartzAdapter
 import scheduler.pingJob.states.EmptyPingJob
-import scheduler.{CborSerializable, KafkaProducer, actorAskTimeout}
+import scheduler.{CborSerializable, KafkaProducer, actorAskTimeout, serviceName}
 
 import java.time.Instant
 
@@ -44,6 +44,7 @@ object PingJob {
           state.applyEvent(state, event)
         }
       )
+      .withTagger(_ => Set(serviceName, entityName))
     }
 
   def persistenceId(id: Id): PersistenceId = PersistenceId.of(entityName, id.value)

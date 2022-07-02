@@ -19,6 +19,8 @@ package object scheduler {
   implicit val controllerTimeout: Timeout = 40.seconds
   implicit val actorAskTimeout: Timeout = 35.seconds
 
+  val serviceName = "scheduler"
+
   private val INCOMING_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
   private val UTC_ZONE_ID = "UTC"
 

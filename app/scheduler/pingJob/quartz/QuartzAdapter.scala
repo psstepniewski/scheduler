@@ -5,18 +5,17 @@ import akka.actor.typed._
 import akka.actor.typed.scaladsl.Behaviors.Receive
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, LoggerOps}
-import akka.cluster.typed.{ClusterSingleton, SingletonActor}
 import com.typesafe.config.Config
-import scheduler.CborSerializable
-import scheduler.pingJob.PingJob
-import scheduler.pingJob.quartz.QuartzAdapter.SchedulerActor.Command._
-import scheduler.pingJob.quartz.QuartzAdapter.SchedulerActor.Message
 import org.quartz
 import org.quartz.impl.StdSchedulerFactory
 import org.quartz.spi.{JobFactory, TriggerFiredBundle}
 import org.quartz.{Job, JobDataMap, ObjectAlreadyExistsException, Scheduler => NativeScheduler}
 import play.api.Logging
 import play.api.inject.Injector
+import scheduler.CborSerializable
+import scheduler.pingJob.PingJob
+import scheduler.pingJob.quartz.QuartzAdapter.SchedulerActor.Command._
+import scheduler.pingJob.quartz.QuartzAdapter.SchedulerActor.Message
 
 import java.time.Instant
 import java.util.Properties
@@ -61,10 +60,10 @@ class QuartzAdapter @Inject()(actorSystem: ActorSystem, injector: Injector, conf
 
   private val jobFactory = new QuartzJobFactory(injector, schedulerId)
 
-  val scheduler: ActorRef[SchedulerActor.Message] = ClusterSingleton(actorSystem.toTyped).init(SingletonActor(
+  val scheduler: ActorRef[SchedulerActor.Message] = actorSystem.spawn(
     Behaviors.supervise(QuartzAdapter.SchedulerActor(jobFactory, quartzProps)).onFailure(SupervisorStrategy.restartWithBackoff(1.second, 10.seconds, 0.2)),
     schedulerId
-  ))
+  )
 }
 
 object QuartzAdapter {

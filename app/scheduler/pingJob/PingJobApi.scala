@@ -11,14 +11,18 @@ object PingJobApi {
   protected trait Command extends Message
 
   object Command {
-    case class Create[A <: KafkaProducer.SerializableMessage](replyTo: ActorRef[Create.Result], pongTopic: TopicName, pongKey: TopicKey, pongData: A, willPongTimestamp: Instant) extends Command
-    object Create {
+    case class Schedule[A <: KafkaProducer.SerializableMessage](replyTo: ActorRef[Schedule.Result], pongTopic: TopicName, pongKey: TopicKey, pongData: A, willPongTimestamp: Instant) extends Command
+    object Schedule {
       sealed trait Result
       object Result {
-        case object Created extends Result
-        case object AlreadyCreated extends Result
+        case object Scheduled extends Result
+        case object AlreadyScheduled extends Result
+        case object ExecutedState extends Result
+        case object CancelledState extends Result
         case class Failure(ex: Throwable) extends Result
       }
+      case class QuartzDone[A <: KafkaProducer.SerializableMessage](c: Schedule[A]) extends Message
+      case class QuartzFailure[A <: KafkaProducer.SerializableMessage](c: Schedule[A], ex: Throwable) extends Message
     }
     case class Execute(replyTo: ActorRef[Execute.Result]) extends Command
     object Execute {
@@ -30,6 +34,8 @@ object PingJobApi {
         case object CancelledState extends Result
         case class Failure(ex: Throwable) extends Result
       }
+      case class KafkaDone(c: Execute) extends Message
+      case class KafkaFailure(c: Execute, ex: Throwable) extends Message
     }
     case class Cancel(replyTo: ActorRef[Cancel.Result]) extends Command
     object Cancel {
@@ -40,6 +46,14 @@ object PingJobApi {
         case object EmptyState extends Result
         case object ExecutedState extends Result
         case class Failure(ex: Throwable) extends Result
+      }
+    }
+    private[pingJob] case class GetSnapshot(replyTo: ActorRef[GetSnapshot.Result]) extends Command
+    private[pingJob] object GetSnapshot {
+      sealed trait Result
+      object Result {
+        case class Snapshot(value: PingJob.Snapshot[_ <: KafkaProducer.SerializableMessage]) extends Result
+        case object EmptyState extends Result
       }
     }
   }

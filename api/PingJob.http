@@ -1,0 +1,53 @@
+### `PingJob` is entity which will publish `pongData` to indicated topic kafka (`pongTopic`) with given topic key (`pongKey`)
+###  at given timestamp (`willPongTimestamp`).
+###
+### `PingJob` states:
+### * Empty - doesn't exists (GET endpoints doesn't return `Empty` status, they return 404 http code for `Empty` `PingJob`),
+### * Scheduled - waiting for `willPongTimestamp` to publish `pongData` to `pongTopic` with `pongKey`,
+### * Executed - `PingJob` already published `pongData` to `pongTopic` with `pongKey` at `willPongTimestamp`,
+### * Cancelled - `PingJob` wasn't executed. It is `Cancelled` so it never executes.
+
+
+###
+### If you want to create new `PingJob`.
+
+PUT {{host}}/scheduler/api/pingJob/PINGJOB_ID_1
+Content-Type: application/json
+
+{
+  "pongTopic": "topics.test",
+  "pongKey": "q8DPmUm9",
+  "pongData": {
+    "messageId":"INF-BFXE-22953-HRRS-54887",
+    "message":{
+      "webLinkId":"test"
+    },
+    "messageTimestamp":"2022-05-13T17:48:40.663273Z"
+  },
+  "willPongTimestamp": "2022-07-23T15:48:00+02:00"
+}
+
+###
+### If you want to get snapshot of `PingJob` state.
+
+GET {{host}}/scheduler/api/pingJob/PINGJOB_ID_1
+
+###
+### If you want to execute `PingJob` now.
+
+PATCH {{host}}/scheduler/api/pingJob/PINGJOB_ID_1
+Content-Type: application/json
+
+{
+  "stateName": "Executed"
+}
+
+###
+### If you want to cancel execution of `PingJob`.
+
+PATCH {{host}}/scheduler/api/pingJob/PINGJOB_ID_1
+Content-Type: application/json
+
+{
+  "stateName": "Cancelled"
+}

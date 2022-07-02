@@ -1,3 +1,7 @@
 # Routes
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
+
+PUT         /scheduler/api/pingJob/:pingJobId                           scheduler.pingJob.api.http.PutPingJobEndpoint.call(pingJobId: scheduler.pingJob.PingJob.Id)
+GET         /scheduler/api/pingJob/:pingJobId                           scheduler.pingJob.api.http.GetPingJobEndpoint.call(pingJobId: scheduler.pingJob.PingJob.Id)
+PATCH       /scheduler/api/pingJob/:pingJobId                           scheduler.pingJob.api.http.PatchPingJobEndpoint.call(pingJobId: scheduler.pingJob.PingJob.Id)

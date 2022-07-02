@@ -1,14 +1,13 @@
 package scheduler.pingJob.quartz
 
+import akka.actor.typed.scaladsl.AskPattern.Askable
+import akka.actor.typed.{Scheduler => AkkaScheduler}
 import akka.util.Timeout
-import org.apache.kafka.clients.producer.ProducerRecord
 import org.quartz.SimpleScheduleBuilder.simpleSchedule
 import org.quartz._
 import play.api.Logging
-import scheduler.KafkaProducer
-import scheduler.pingJob.PingJob
-import scheduler.pingJob.api.kafka.kafka.CommandsTopic
 import scheduler.pingJob.quartz.QuartzPingJob.{RETRIES_AFTER_MINUTES, jobKey}
+import scheduler.pingJob.{PingJob, PingJobApi, PingJobSelector}
 
 import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.Date
@@ -17,7 +16,7 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.{Failure, Success, Try}
 /*
-  Following `ExecutionContext` is used only for `kafkaProducer#sendMessage` call. Job is executed in dedicated quartz thread pool.
+  Following `ExecutionContext` is used only for `ActorRef#ask` call. Job is executed in dedicated quartz thread pool.
   Note that because of `Await.result` quartz thread-pool is blocking. `Await.result` ensures that Job won't done
   before Future ends.
 
@@ -26,19 +25,30 @@ import scala.util.{Failure, Success, Try}
 
   Default misfire policy runs this Job as soon as possible if misfire occurs.
 */
-class QuartzPingJob @Inject()(kafkaProducer: KafkaProducer)(implicit ec: ExecutionContext) extends org.quartz.Job with Logging {
+class QuartzPingJob @Inject()(pingJobSelector: PingJobSelector)(implicit ec: ExecutionContext, akkaScheduler: AkkaScheduler) extends org.quartz.Job with Logging {
   override def execute(context: JobExecutionContext): Unit = {
     val pingJobId = PingJob.Id(context.getJobDetail.getJobDataMap.getString(QuartzPingJob.PING_JOB_ID))
     val retryNo = context.getTrigger.getJobDataMap.getInt(QuartzPingJob.RETRY_NO)
     Try {
       logger.debug(s"QuartzPingJob[$pingJobId, retryNo=$retryNo] starts to execute")
-      Await.result(
-        kafkaProducer.sendMessage(new ProducerRecord(CommandsTopic.name.value, pingJobId.value, CommandsTopic.Messages.Execute(pingJobId))),
-        QuartzPingJob.timeout.duration
-      )
+      val r = pingJobSelector
+        .actorRef(pingJobId)
+        .ask(replyTo => PingJobApi.Command.Execute(replyTo))(QuartzPingJob.timeout, akkaScheduler)
+        .map{
+          case PingJobApi.Command.Execute.Result.Executed =>
+            pingJobId
+          case PingJobApi.Command.Execute.Result.AlreadyExecuted =>
+            pingJobId
+          case PingJobApi.Command.Execute.Result.EmptyState =>
+            throw new RuntimeException(s"PingJob[$pingJobId] not found")
+          case PingJobApi.Command.Execute.Result.CancelledState =>
+            pingJobId
+          case PingJobApi.Command.Execute.Result.Failure(ex) =>
+            throw ex
+        }
+      Await.result(r, QuartzPingJob.timeout.duration)
     } match {
       case Success(_) =>
-        //do nothing
         context.getScheduler.deleteJob(jobKey(pingJobId))
       case Failure(e) =>
         logger.error(s"QuartzPingJob[$pingJobId, retryNo=$retryNo] fails, job will be rescheduled to the future", e)

@@ -71,7 +71,7 @@ class QuartzPingJob @Inject()(pingJobSelector: PingJobSelector)(implicit ec: Exe
 object QuartzPingJob {
   private[quartz] val PING_JOB_ID = "pingJobId"
   private[quartz] val RETRY_NO = "retryNo"
-  private[quartz] val timeout: Timeout = 20.seconds
+  private[quartz] val timeout: Timeout = 30.seconds
 
   private val RETRIES_AFTER_MINUTES = Array(1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 15, 15, 15, 30, 30, 30, 60, 60, 60, 2*60, 2*60, 2*60, 4*60, 4*60, 4*60, 8*60, 8*60, 8*60, 24*60, 24*60, 24*60)
 

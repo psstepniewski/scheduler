@@ -3,28 +3,22 @@ package scheduler.pingJob.api.http
 import akka.actor.ActorSystem
 import akka.actor.typed.Scheduler
 import akka.actor.typed.scaladsl.AskPattern.Askable
-import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
-import akka.util.Timeout
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{AbstractController, Action, ControllerComponents}
-import scheduler.WithJsError
+import scheduler.{WithJsError, controllerTimeout}
 import scheduler.pingJob.{PingJob, PingJobApi, PingJobSelector}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PatchPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents, actorSystem: ActorSystem)(implicit ec: ExecutionContext)
+class PatchPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents, actorSystem: ActorSystem)(implicit ec: ExecutionContext, scheduler: Scheduler)
   extends AbstractController(cc)
     with Logging
     with WithJsError {
 
   import PatchPingJobEndpoint._
-
-  private implicit val controllerTimeout: Timeout = 30.seconds
-  private implicit val akkaScheduler: Scheduler = actorSystem.toTyped.scheduler
 
   def call(pingJobId: PingJob.Id): Action[JsValue] = Action.async(parse.json) { implicit request =>
     logger.debug(s"PatchPingJobEndpoint[$pingJobId]: request received")

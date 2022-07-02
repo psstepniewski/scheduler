@@ -1,3 +1,4 @@
+import akka.util.Timeout
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -10,9 +11,13 @@ import play.api.mvc.BaseController
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.TimeZone
+import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success, Try}
 
 package object scheduler {
+
+  implicit val controllerTimeout: Timeout = 40.seconds
+  implicit val actorAskTimeout: Timeout = 35.seconds
 
   private val INCOMING_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
   private val UTC_ZONE_ID = "UTC"

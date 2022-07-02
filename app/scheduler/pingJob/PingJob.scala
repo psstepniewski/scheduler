@@ -2,19 +2,15 @@ package scheduler.pingJob
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior, Scheduler}
-import akka.util.Timeout
 import scheduler.pingJob.quartz.QuartzAdapter
 import scheduler.pingJob.states.EmptyPingJob
-import scheduler.{CborSerializable, KafkaProducer}
+import scheduler.{CborSerializable, KafkaProducer, actorAskTimeout}
 
 import java.time.Instant
-import scala.concurrent.duration.DurationInt
 
 object PingJob {
 
   import PingJobApi._
-
-  private implicit val actorAskTimeout: Timeout = 30.seconds
 
   case class Id(value: String) extends AnyVal
   case class TopicName(value: String) extends AnyVal

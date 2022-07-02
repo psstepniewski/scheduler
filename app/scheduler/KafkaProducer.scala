@@ -24,13 +24,13 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
+
 @Singleton
-class KafkaProducer @Inject()(actorSystem: ActorSystem, idGenerator: scheduler.IdGenerator, config: Config)(implicit ec: ExecutionContext) extends Logging {
+class KafkaProducer @Inject()(actorSystem: ActorSystem, idGenerator: IdGenerator, config: Config)(implicit ec: ExecutionContext, scheduler: Scheduler) extends Logging {
 
   import KafkaProducer._
 
-  implicit private val scheduler: Scheduler = actorSystem.toTyped.scheduler
-  implicit private val timeout: Timeout = Timeout(30.seconds)
+  private val timeout: Timeout = Timeout(30.seconds)
 
   private val producer: NativeKafkaProducer[String, SerializableMessage] = new NativeKafkaProducer[String, SerializableMessage](getKafkaProducerProperties(config), new StringSerializer(), new KafkaMessageSerializer[SerializableMessage](idGenerator))
   private val producerWrapper: ActorRef[ActorWrapper.ActorMessage] = actorSystem
@@ -39,7 +39,7 @@ class KafkaProducer @Inject()(actorSystem: ActorSystem, idGenerator: scheduler.I
 
   def sendMessage[A <: SerializableMessage](producerRecord: ProducerRecord[String, A]): Future[RecordMetadata] = {
     producerWrapper
-      .ask[ActorWrapper.Commands.SendRecord.Result](replyTo => ActorWrapper.Commands.SendRecord(replyTo, producerRecord))
+      .ask[ActorWrapper.Commands.SendRecord.Result](replyTo => ActorWrapper.Commands.SendRecord(replyTo, producerRecord))(timeout, scheduler)
       .map {
         case r: ActorWrapper.Commands.SendRecord.Results.RecordSent => r.metadata
         case r: ActorWrapper.Commands.SendRecord.Results.SentFailed => throw r.exception

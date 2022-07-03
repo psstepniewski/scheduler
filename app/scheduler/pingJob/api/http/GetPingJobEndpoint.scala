@@ -1,7 +1,5 @@
 package scheduler.pingJob.api.http
 
-import akka.actor.typed.Scheduler
-import akka.actor.typed.scaladsl.AskPattern.Askable
 import com.fasterxml.jackson.databind.JsonNode
 import play.api.Logging
 import play.api.libs.json.Json
@@ -13,14 +11,14 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class GetPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents)(implicit ec: ExecutionContext, scheduler: Scheduler)
+class GetPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents)(implicit ec: ExecutionContext)
   extends AbstractController(cc)
   with Logging {
 
   def call(pingJobId: PingJob.Id): Action[AnyContent] = Action.async { implicit request =>
     logger.debug(s"GetPingJobEndpoint[$pingJobId]: request received")
     pingJobSelector
-      .actorRef(pingJobId)
+      .entityRef(pingJobId)
       .ask(replyTo => PingJobApi.Command.GetSnapshot(replyTo))
       .map{
         case v: PingJobApi.Command.GetSnapshot.Result.Snapshot =>

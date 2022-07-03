@@ -19,4 +19,23 @@ scheduler {
     }
 }
 
+akka {
+  remote.artery {
+    canonical {
+      hostname = "127.0.0.1"
+      port = 2551
+    }
+  }
+
+  cluster {
+    seed-nodes = [
+      "akka://application@127.0.0.1:2551"
+    ]
+
+    sharding {
+      verbose-debug-logging = on
+    }
+  }
+}
+
 include "0_post-conf-includes.conf"

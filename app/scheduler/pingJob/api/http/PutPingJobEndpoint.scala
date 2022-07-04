@@ -8,9 +8,10 @@ import scheduler.pingJob.{PingJob, PingJobApi, PingJobSelector}
 import scheduler.{KafkaProducer, WithJsError, controllerTimeout}
 
 import java.time.OffsetDateTime
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class PutPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents)(implicit ec: ExecutionContext)
   extends AbstractController(cc)
     with Logging

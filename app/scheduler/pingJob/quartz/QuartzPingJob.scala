@@ -41,8 +41,6 @@ class QuartzPingJob @Inject()(pingJobSelector: PingJobSelector)(implicit ec: Exe
             pingJobId
           case PingJobApi.Command.Execute.Result.EmptyState =>
             throw new RuntimeException(s"PingJob[$pingJobId] not found")
-          case PingJobApi.Command.Execute.Result.CancelledState =>
-            pingJobId
           case PingJobApi.Command.Execute.Result.Failure(ex) =>
             throw ex
         }

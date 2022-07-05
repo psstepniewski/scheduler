@@ -38,9 +38,6 @@ class PutPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: Control
             case PingJobApi.Command.Schedule.Result.ExecutedState =>
               logger.debug(s"PutPingJobEndpoint[$pingJobId]: returning 200 (ExecutedState).")
               Ok("ExecutedState")
-            case PingJobApi.Command.Schedule.Result.CancelledState =>
-              logger.debug(s"PutPingJobEndpoint[$pingJobId]: returning 200 (CancelledState).")
-              Ok("CancelledState")
             case PingJobApi.Command.Schedule.Result.Failure(ex) =>
               throw ex
           }

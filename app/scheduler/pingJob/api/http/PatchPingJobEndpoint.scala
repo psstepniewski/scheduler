@@ -25,11 +25,11 @@ class PatchPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: Contr
       case JsSuccess(v, _) =>
         v.stateName match {
           case PingJob.StateName.Empty =>
-            logger.debug(s"PatchPingJobEndpoint[$pingJobId]: returning 400 (Not allowed `stateName` value: ${v.stateName}, allowed values are [`${PingJob.StateName.Executed}`, `${PingJob.StateName.Cancelled})`].")
-            Future.successful(BadRequest(s"Not allowed `stateName` value: ${v.stateName} (only allowed values are [`${PingJob.StateName.Executed}`, `${PingJob.StateName.Cancelled})`])"))
+            logger.debug(s"PatchPingJobEndpoint[$pingJobId]: returning 400 (Not allowed `stateName` value: ${v.stateName}, allowed values are [`${PingJob.StateName.Executed}`]).")
+            Future.successful(BadRequest(s"Not allowed `stateName` value: ${v.stateName} (only allowed values are [`${PingJob.StateName.Executed}`])"))
           case PingJob.StateName.Scheduled =>
-            logger.debug(s"PatchPingJobEndpoint[$pingJobId]: returning 400 (Not allowed `stateName` value: ${v.stateName}, allowed values are [`${PingJob.StateName.Executed}`, `${PingJob.StateName.Cancelled})`]).")
-            Future.successful(BadRequest(s"Not allowed `stateName` value: ${v.stateName} (only allowed values are [`${PingJob.StateName.Executed}`, `${PingJob.StateName.Cancelled})`])"))
+            logger.debug(s"PatchPingJobEndpoint[$pingJobId]: returning 400 (Not allowed `stateName` value: ${v.stateName}, allowed values are [`${PingJob.StateName.Executed}`]).")
+            Future.successful(BadRequest(s"Not allowed `stateName` value: ${v.stateName} (only allowed values are [`${PingJob.StateName.Executed}`])"))
           case PingJob.StateName.Executed =>
             pingJobSelector
               .actorRef(pingJobId)
@@ -41,39 +41,11 @@ class PatchPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: Contr
                 case PingJobApi.Command.Execute.Result.EmptyState =>
                   logger.debug(s"PatchPingJobEndpoint[$pingJobId]: returning 404.")
                   NotFound
-                case PingJobApi.Command.Execute.Result.CancelledState =>
-                  logger.debug(s"PatchPingJobEndpoint[$pingJobId]: returning 202 (CancelledState).")
-                  Accepted("CancelledState")
                 case PingJobApi.Command.Execute.Result.AlreadyExecuted =>
                   logger.debug(s"PatchPingJobEndpoint[$pingJobId]: returning 202 (AlreadyExecuted).")
                   Accepted("AlreadyExecuted")
                 case PingJobApi.Command.Execute.Result.Failure(ex) =>
                   throw ex
-              }
-              .recover{
-                case ex =>
-                  logger.error(s"PatchPingJobEndpoint[$pingJobId]: returning 500.", ex)
-                  InternalServerError(ex.getMessage)
-              }
-          case PingJob.StateName.Cancelled =>
-            pingJobSelector
-              .actorRef(pingJobId)
-              .ask(replyTo => PingJobApi.Command.Cancel(replyTo))
-              .map {
-                case PingJobApi.Command.Cancel.Result.Cancelled =>
-                  logger.debug(s"PatchPingJobEndpoint[$pingJobId]: returning 200 (Cancelled).")
-                  Ok("Cancelled")
-                case PingJobApi.Command.Cancel.Result.AlreadyCancelled =>
-                  logger.debug(s"PatchPingJobEndpoint[$pingJobId]: returning 202 (AlreadyCancelled).")
-                  Accepted("AlreadyCancelled")
-                case PingJobApi.Command.Cancel.Result.EmptyState =>
-                  logger.debug(s"PatchPingJobEndpoint[$pingJobId]: returning 404.")
-                  NotFound
-                case PingJobApi.Command.Cancel.Result.ExecutedState =>
-                  logger.debug(s"PatchPingJobEndpoint[$pingJobId]: returning 202 (ExecutedState).")
-                  Accepted("ExecutedState")
-                case v: PingJobApi.Command.Cancel.Result.Failure =>
-                  throw v.ex
               }
               .recover{
                 case ex =>

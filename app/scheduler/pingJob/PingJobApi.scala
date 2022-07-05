@@ -18,7 +18,6 @@ object PingJobApi {
         case object Scheduled extends Result
         case object AlreadyScheduled extends Result
         case object ExecutedState extends Result
-        case object CancelledState extends Result
         case class Failure(ex: Throwable) extends Result
       }
     }
@@ -29,18 +28,6 @@ object PingJobApi {
         case object Executed extends Result
         case object AlreadyExecuted extends Result
         case object EmptyState extends Result
-        case object CancelledState extends Result
-        case class Failure(ex: Throwable) extends Result
-      }
-    }
-    case class Cancel(replyTo: ActorRef[Cancel.Result]) extends Command
-    object Cancel {
-      sealed trait Result
-      object Result {
-        case object Cancelled extends Result
-        case object AlreadyCancelled extends Result
-        case object EmptyState extends Result
-        case object ExecutedState extends Result
         case class Failure(ex: Throwable) extends Result
       }
     }

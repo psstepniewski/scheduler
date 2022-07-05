@@ -5,7 +5,6 @@
 ### * Empty - doesn't exists (GET endpoints doesn't return `Empty` status, they return 404 http code for `Empty` `PingJob`),
 ### * Scheduled - waiting for `willPongTimestamp` to publish `pongData` to `pongTopic` with `pongKey`,
 ### * Executed - `PingJob` already published `pongData` to `pongTopic` with `pongKey` at `willPongTimestamp`,
-### * Cancelled - `PingJob` wasn't executed. It is `Cancelled` so it never executes.
 
 
 ###
@@ -40,14 +39,4 @@ Content-Type: application/json
 
 {
   "stateName": "Executed"
-}
-
-###
-### If you want to cancel execution of `PingJob`.
-
-PATCH {{host}}/scheduler/api/pingJob/PINGJOB_ID_1
-Content-Type: application/json
-
-{
-  "stateName": "Cancelled"
 }

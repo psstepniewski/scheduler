@@ -16,6 +16,10 @@ dist
 /.settings
 
 conf/scheduler.conf
+conf/scheduler-1.conf
+conf/scheduler-2.conf
+conf/scheduler-3.conf
+
 */http-client.private.env.json
 .bsp/
 docker/target/*

@@ -13,7 +13,7 @@ object PingJobApi {
   object Command {
     case class Schedule[A <: KafkaProducer.SerializableMessage](replyTo: ActorRef[Schedule.Result], pongTopic: PingJob.TopicName, pongKey: PingJob.TopicKey, pongData: A, willPongTimestamp: Instant) extends Command
     object Schedule {
-      sealed trait Result
+      sealed trait Result extends CborSerializable
       object Result {
         case object Scheduled extends Result
         case object AlreadyScheduled extends Result
@@ -25,7 +25,7 @@ object PingJobApi {
     }
     case class Execute(replyTo: ActorRef[Execute.Result]) extends Command
     object Execute {
-      sealed trait Result
+      sealed trait Result extends CborSerializable
       object Result {
         case object Executed extends Result
         case object AlreadyExecuted extends Result
@@ -37,7 +37,7 @@ object PingJobApi {
     }
     private[pingJob] case class GetSnapshot(replyTo: ActorRef[GetSnapshot.Result]) extends Command
     private[pingJob] object GetSnapshot {
-      sealed trait Result
+      sealed trait Result extends CborSerializable
       object Result {
         case class Snapshot(value: PingJob.Snapshot[_ <: KafkaProducer.SerializableMessage]) extends Result
         case object EmptyState extends Result

@@ -5,6 +5,7 @@ import akka.actor.typed._
 import akka.actor.typed.scaladsl.Behaviors.Receive
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, LoggerOps}
+import akka.cluster.typed.{ClusterSingleton, SingletonActor}
 import com.typesafe.config.Config
 import org.quartz
 import org.quartz.impl.StdSchedulerFactory
@@ -60,10 +61,10 @@ class QuartzAdapter @Inject()(actorSystem: ActorSystem, injector: Injector, conf
 
   private val jobFactory = new QuartzJobFactory(injector, schedulerId)
 
-  val scheduler: ActorRef[SchedulerActor.Message] = actorSystem.spawn(
+  val scheduler: ActorRef[SchedulerActor.Message] = ClusterSingleton(actorSystem.toTyped).init(SingletonActor(
     Behaviors.supervise(QuartzAdapter.SchedulerActor(jobFactory, quartzProps)).onFailure(SupervisorStrategy.restartWithBackoff(1.second, 10.seconds, 0.2)),
     schedulerId
-  )
+  ))
 }
 
 object QuartzAdapter {
@@ -138,7 +139,7 @@ object QuartzAdapter {
     object Command {
       case class SchedulePingJob(replyTo: ActorRef[SchedulePingJob.Result], pingJobId: PingJob.Id, willPongTimestamp: Instant) extends Command
       object SchedulePingJob {
-        sealed trait Result
+        sealed trait Result extends CborSerializable
         object Result {
           case object Scheduled extends Result
           case object AlreadyScheduled extends Result
@@ -147,7 +148,7 @@ object QuartzAdapter {
       }
       case class TriggerPingJob(replyTo: ActorRef[TriggerPingJob.Result], pingJobId: PingJob.Id) extends Command
       object TriggerPingJob {
-        sealed trait Result
+        sealed trait Result extends CborSerializable
         object Result {
           case object Triggered extends Result
           case object NotFound extends Result
@@ -156,7 +157,7 @@ object QuartzAdapter {
       }
       case class DeletePingJob(replyTo: ActorRef[DeletePingJob.Result], pingJobId: PingJob.Id) extends Command
       object DeletePingJob {
-        sealed trait Result
+        sealed trait Result extends CborSerializable
         object Result {
           case object Deleted extends Result
           case object NotFound extends Result

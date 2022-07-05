@@ -1,7 +1,5 @@
 package scheduler.pingJob.api.http
 
-import akka.actor.typed.Scheduler
-import akka.actor.typed.scaladsl.AskPattern.Askable
 import com.fasterxml.jackson.databind.JsonNode
 import play.api.Logging
 import play.api.libs.json._
@@ -14,7 +12,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PutPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents)(implicit ec: ExecutionContext, scheduler: Scheduler)
+class PutPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents)(implicit ec: ExecutionContext)
   extends AbstractController(cc)
     with Logging
     with WithJsError {
@@ -26,7 +24,7 @@ class PutPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: Control
     request.body.validate[Request] match {
       case JsSuccess(v, _) =>
         pingJobSelector
-          .actorRef(pingJobId)
+          .entityRef(pingJobId)
           .ask[PingJobApi.Command.Schedule.Result](replyTo => PingJobApi.Command.Schedule(replyTo, v.pongTopic, v.pongKey, KafkaProducer.PureJson(v.pongData), v.willPongTimestamp.toInstant))
           .map {
             case PingJobApi.Command.Schedule.Result.Scheduled =>

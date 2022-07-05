@@ -2,6 +2,7 @@ package scheduler.pingJob
 
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.{Behaviors, LoggerOps}
+import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
 import scheduler.pingJob.quartz.QuartzAdapter
@@ -14,7 +15,7 @@ object PingJob {
 
   import PingJobApi._
 
-  private val entityName: String = "PingJob"
+  val TypeKey: EntityTypeKey[Message] = EntityTypeKey("PingJob")
 
   case class Id(value: String) extends AnyVal
   case class TopicName(value: String) extends AnyVal
@@ -33,25 +34,25 @@ object PingJob {
 
   def apply[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer)(implicit akkaScheduler: Scheduler): Behavior[Message] =
     Behaviors.setup { implicit context =>
-      context.log.debug2("Starting entity actor {}[{}]", entityName, id)
+      context.log.debug2("Starting entity actor {}[{}]", TypeKey.name, id)
       EventSourcedBehavior[Message, Event, State[A]](
         persistenceId(id),
         new EmptyPingJob[A](id, quartzScheduler, kafkaProducer),
         (state, msg) => {
-          context.log.debug("{}[{}, {}] receives message {}", entityName, id, state.stateName, msg)
+          context.log.debug("{}[{}, {}] receives message {}", TypeKey.name, id, state.stateName, msg)
           state.applyMessage(msg)
         },
         (state, event) => {
-          context.log.debug("{}[{}, {}] applies event {}", entityName, id, state.stateName, event)
+          context.log.debug("{}[{}, {}] applies event {}", TypeKey.name, id, state.stateName, event)
           state.applyEvent(state, event)
         }
       )
-      .withTagger(_ => Set(scheduler.serviceName, entityName))
+      .withTagger(_ => Set(scheduler.serviceName, TypeKey.name))
       .receiveSignal {
-        case (state, PreRestart) => context.log.debugN("{}[{}, {}] receives PreRestart signal", entityName, id, state.stateName)
-        case (state, PostStop) => context.log.debugN("{}[{}, {}] receives PostStop signal", entityName, id, state.stateName)
+        case (state, PreRestart) => context.log.debugN("{}[{}, {}] receives PreRestart signal", TypeKey.name, id, state.stateName)
+        case (state, PostStop) => context.log.debugN("{}[{}, {}] receives PostStop signal", TypeKey.name, id, state.stateName)
       }
     }
 
-  def persistenceId(id: Id): PersistenceId = PersistenceId.of(entityName, id.value)
+  def persistenceId(id: Id): PersistenceId = PersistenceId.of(TypeKey.name, id.value)
 }

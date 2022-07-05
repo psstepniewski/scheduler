@@ -1,7 +1,6 @@
 package scheduler.pingJob.api.http
 
 import akka.actor.typed.Scheduler
-import akka.actor.typed.scaladsl.AskPattern.Askable
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{AbstractController, Action, ControllerComponents}
@@ -12,7 +11,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PatchPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents)(implicit ec: ExecutionContext, scheduler: Scheduler)
+class PatchPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: ControllerComponents)(implicit ec: ExecutionContext)
   extends AbstractController(cc)
     with Logging
     with WithJsError {
@@ -32,7 +31,7 @@ class PatchPingJobEndpoint @Inject()(pingJobSelector: PingJobSelector, cc: Contr
             Future.successful(BadRequest(s"Not allowed `stateName` value: ${v.stateName} (only allowed values are [`${PingJob.StateName.Executed}`])"))
           case PingJob.StateName.Executed =>
             pingJobSelector
-              .actorRef(pingJobId)
+              .entityRef(pingJobId)
               .ask(replyTo => PingJobApi.Command.Execute(replyTo))
               .map {
                 case PingJobApi.Command.Execute.Result.Executed =>

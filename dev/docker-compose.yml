@@ -37,7 +37,7 @@ services:
       KAFKA_NUM_PARTITIONS: 3
     depends_on:
       - zookeeper
-  scheduler:
+  scheduler-1:
     image: 'stepniewski.tech/dev-tools-scheduler:latest'
     restart: always
     user: "${UID}:${GID}"
@@ -46,9 +46,39 @@ services:
       - "${PWD}/1-docker-data/scheduler/volumes/sbt:/.sbt"
       - "${PWD}/1-docker-data/scheduler/volumes/ivy:/.ivy"
       - "${PWD}/1-docker-data/scheduler/volumes/cache:/.cache"
-      - "${PWD}/0-first-run/conf/scheduler.conf:/app/conf/scheduler.conf"
+      - "${PWD}/0-first-run/conf/scheduler-1.conf:/app/conf/scheduler.conf"
     ports:
-      - 7001:7001
+      - 7011:7001
+    depends_on:
+      - scheduler-postgres
+      - kafka
+  scheduler-2:
+    image: 'stepniewski.tech/dev-tools-scheduler:latest'
+    restart: always
+    user: "${UID}:${GID}"
+    volumes:
+      - "${SCHEDULER_PATH}:/app"
+      - "${PWD}/1-docker-data/scheduler/volumes/sbt:/.sbt"
+      - "${PWD}/1-docker-data/scheduler/volumes/ivy:/.ivy"
+      - "${PWD}/1-docker-data/scheduler/volumes/cache:/.cache"
+      - "${PWD}/0-first-run/conf/scheduler-2.conf:/app/conf/scheduler.conf"
+    ports:
+      - 7012:7001
+    depends_on:
+      - scheduler-postgres
+      - kafka
+  scheduler-3:
+    image: 'stepniewski.tech/dev-tools-scheduler:latest'
+    restart: always
+    user: "${UID}:${GID}"
+    volumes:
+      - "${SCHEDULER_PATH}:/app"
+      - "${PWD}/1-docker-data/scheduler/volumes/sbt:/.sbt"
+      - "${PWD}/1-docker-data/scheduler/volumes/ivy:/.ivy"
+      - "${PWD}/1-docker-data/scheduler/volumes/cache:/.cache"
+      - "${PWD}/0-first-run/conf/scheduler-3.conf:/app/conf/scheduler.conf"
+    ports:
+      - 7013:7001
     depends_on:
       - scheduler-postgres
       - kafka

@@ -1,7 +1,7 @@
 package scheduler.pingJob
 
 import akka.actor.typed._
-import akka.actor.typed.scaladsl.{ActorContext, Behaviors, LoggerOps}
+import akka.actor.typed.scaladsl.{Behaviors, LoggerOps}
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
 import scheduler.pingJob.quartz.QuartzAdapter
@@ -22,8 +22,8 @@ object PingJob {
 
   private[pingJob] trait State[A <: KafkaProducer.SerializableMessage] {
     def snapshot: Snapshot[A]
-    def applyMessage(msg: Message)(implicit context: ActorContext[Message]): Effect[Event, State[A]]
-    def applyEvent(state: State[A], event: Event)(implicit context: ActorContext[Message]): State[A]
+    def applyMessage(msg: Message): Effect[Event, State[A]]
+    def applyEvent(state: State[A], event: Event): State[A]
     def stateName: StateName.Value
   }
   case class Snapshot[A <: KafkaProducer.SerializableMessage](id: Id, stateName: StateName.Value, pongTopic: TopicName, pongKey: TopicKey, pongData: A, willPongTimestamp: Instant, createdTimestamp: Instant, executedTimestamp: Option[Instant]) extends CborSerializable
@@ -58,8 +58,8 @@ object PingJob {
 
   class StateStub[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer) extends State[A] {
     override def snapshot: Snapshot[A] = ???
-    override def applyMessage(msg: Message)(implicit context: ActorContext[Message]): Effect[Event, State[A]] = ???
-    override def applyEvent(state: State[A], event: Event)(implicit context: ActorContext[Message]): State[A] = ???
+    override def applyMessage(msg: Message): Effect[Event, State[A]] = ???
+    override def applyEvent(state: State[A], event: Event): State[A] = ???
     override def stateName: StateName.Value = ???
   }
 

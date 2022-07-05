@@ -32,14 +32,11 @@ object PingJob {
   }
 
   def apply[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer)(implicit akkaScheduler: Scheduler): Behavior[Message] =
-    new EmptyPingJob(id, quartzScheduler, kafkaProducer).behavior()
-
-  def applyCandidate[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer)(implicit akkaScheduler: Scheduler): Behavior[Message] =
     Behaviors.setup { implicit context =>
       context.log.debug2("Starting entity actor {}[{}]", entityName, id)
       EventSourcedBehavior[Message, Event, State[A]](
         persistenceId(id),
-        new StateStub(id, quartzScheduler, kafkaProducer),
+        new EmptyPingJob[A](id, quartzScheduler, kafkaProducer),
         (state, msg) => {
           context.log.debug("{}[{}, {}] receives message {}", entityName, id, state.stateName, msg)
           state.applyMessage(msg)
@@ -55,13 +52,6 @@ object PingJob {
         case (state, PostStop) => context.log.debugN("{}[{}, {}] receives PostStop signal", entityName, id, state.stateName)
       }
     }
-
-  class StateStub[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer) extends State[A] {
-    override def snapshot: Snapshot[A] = ???
-    override def applyMessage(msg: Message): Effect[Event, State[A]] = ???
-    override def applyEvent(state: State[A], event: Event): State[A] = ???
-    override def stateName: StateName.Value = ???
-  }
 
   def persistenceId(id: Id): PersistenceId = PersistenceId.of(entityName, id.value)
 }

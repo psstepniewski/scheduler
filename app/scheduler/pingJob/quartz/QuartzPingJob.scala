@@ -1,5 +1,7 @@
 package scheduler.pingJob.quartz
 
+import akka.actor.typed.scaladsl.AskPattern.Askable
+import akka.actor.typed.{Scheduler => AkkaScheduler}
 import akka.util.Timeout
 import org.quartz.SimpleScheduleBuilder.simpleSchedule
 import org.quartz._
@@ -23,15 +25,15 @@ import scala.util.{Failure, Success, Try}
 
   Default misfire policy runs this Job as soon as possible if misfire occurs.
 */
-class QuartzPingJob @Inject()(pingJobSelector: PingJobSelector)(implicit ec: ExecutionContext) extends org.quartz.Job with Logging {
+class QuartzPingJob @Inject()(pingJobSelector: PingJobSelector)(implicit ec: ExecutionContext, akkaScheduler: AkkaScheduler) extends org.quartz.Job with Logging {
   override def execute(context: JobExecutionContext): Unit = {
     val pingJobId = PingJob.Id(context.getJobDetail.getJobDataMap.getString(QuartzPingJob.PING_JOB_ID))
     val retryNo = context.getTrigger.getJobDataMap.getInt(QuartzPingJob.RETRY_NO)
     Try {
       logger.debug(s"QuartzPingJob[$pingJobId, retryNo=$retryNo] starts to execute")
       val r = pingJobSelector
-        .entityRef(pingJobId)
-        .ask(replyTo => PingJobApi.Command.Execute(replyTo))(QuartzPingJob.timeout)
+        .actorRef(pingJobId)
+        .ask(replyTo => PingJobApi.Command.Execute(replyTo))(QuartzPingJob.timeout, akkaScheduler)
         .map{
           case PingJobApi.Command.Execute.Result.Executed =>
             pingJobId

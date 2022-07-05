@@ -1,21 +1,14 @@
 package scheduler.pingJob
 
-import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior, Scheduler}
-import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
-import akka.persistence.typed.PersistenceId
-import akka.persistence.typed.scaladsl.{EventSourcedBehavior, ReplyEffect}
 import scheduler.pingJob.quartz.QuartzAdapter
-import scheduler.pingJob.states.EmptyPingJob
-import scheduler.{CborSerializable, KafkaProducer, actorAskTimeout, serviceName}
+import scheduler.{CborSerializable, KafkaProducer}
 
 import java.time.Instant
 
 object PingJob {
 
   import PingJobApi._
-
-  val TypeKey: EntityTypeKey[PingJobApi.Message] = EntityTypeKey("PingJob")
 
   case class Id(value: String) extends AnyVal
   case class TopicName(value: String) extends AnyVal
@@ -25,28 +18,7 @@ object PingJob {
   object StateName extends Enumeration {
     val Empty, Scheduled, Executed, Cancelled: Value = Value
   }
-  trait State {
-    def applyMessage(msg: Message): ReplyEffect[Event, State]
-    def applyEvent(state: State, event: Event): State
-    def stateName: StateName.Value
-  }
 
   def apply[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer)(implicit akkaScheduler: Scheduler): Behavior[Message] =
-    Behaviors.setup { implicit context =>
-      EventSourcedBehavior.withEnforcedReplies[Message, Event, State](
-        persistenceId = persistenceId(id),
-        emptyState = new EmptyPingJob(id, quartzScheduler, kafkaProducer),
-        commandHandler = (state, msg) => {
-          context.log.debug("{}[{},{}] received message {}", TypeKey.name, id, state.stateName, msg)
-          state.applyMessage(msg)
-        },
-        eventHandler = (state, event) => {
-          context.log.debug("{}[{},{}] will apply event {}", TypeKey.name, id, state.stateName, event)
-          state.applyEvent(state, event)
-        }
-      )
-      .withTagger(_ => Set(serviceName, TypeKey.name))
-    }
-
-  def persistenceId(id: Id): PersistenceId = PersistenceId.of(TypeKey.name, id.value)
+    ???
 }

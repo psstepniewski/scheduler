@@ -2,6 +2,7 @@ package scheduler.pingJob
 
 import akka.actor.typed.{ActorRef, Behavior, Scheduler}
 import scheduler.pingJob.quartz.QuartzAdapter
+import scheduler.pingJob.states.EmptyPingJob
 import scheduler.{CborSerializable, KafkaProducer}
 
 import java.time.Instant
@@ -20,5 +21,5 @@ object PingJob {
   }
 
   def apply[A <: KafkaProducer.SerializableMessage](id: Id, quartzScheduler: ActorRef[QuartzAdapter.SchedulerActor.Command], kafkaProducer: KafkaProducer)(implicit akkaScheduler: Scheduler): Behavior[Message] =
-    ???
+    new EmptyPingJob(id, quartzScheduler, kafkaProducer).behavior()
 }

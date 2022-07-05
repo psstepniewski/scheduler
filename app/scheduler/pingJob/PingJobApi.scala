@@ -20,6 +20,8 @@ object PingJobApi {
         case object ExecutedState extends Result
         case class Failure(ex: Throwable) extends Result
       }
+      case class QuartzDone[A <: KafkaProducer.SerializableMessage](c: Schedule[A]) extends Message
+      case class QuartzFailure[A <: KafkaProducer.SerializableMessage](c: Schedule[A], ex: Throwable) extends Message
     }
     case class Execute(replyTo: ActorRef[Execute.Result]) extends Command
     object Execute {
@@ -30,6 +32,8 @@ object PingJobApi {
         case object EmptyState extends Result
         case class Failure(ex: Throwable) extends Result
       }
+      case class KafkaDone(c: Execute) extends Message
+      case class KafkaFailure(c: Execute, ex: Throwable) extends Message
     }
     private[pingJob] case class GetSnapshot(replyTo: ActorRef[GetSnapshot.Result]) extends Command
     private[pingJob] object GetSnapshot {
